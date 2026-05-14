@@ -1,34 +1,23 @@
-#!/bin/bash
-set -e
+FROM debian:bookworm
 
-# Ensure SSL directory exists
-mkdir -p /etc/nginx/ssl
+RUN apt-get update && apt-get install -y \
+    nginx \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Default domain if not provided
-: "${DOMAIN_NAME:=localhost}"
+# Ensure nginx runs as www-data with correct UID
+RUN usermod -u 33 www-data && groupmod -g 33 www-data
 
-# Generate SSL certificate if it doesn't exist
-if [ ! -f /etc/nginx/ssl/nginx.crt ]; then
-    echo "Generating self-signed SSL certificate for ${DOMAIN_NAME}..."
+# Create SSL directory
+RUN mkdir -p /etc/nginx/ssl
 
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout /etc/nginx/ssl/nginx.key \
-        -out /etc/nginx/ssl/nginx.crt \
-        -subj "/C=US/ST=State/L=City/O=Organization/CN=${DOMAIN_NAME}"
+# Copy configuration files
+COPY conf/nginx.conf /etc/nginx/nginx.conf
+COPY tools/generate_ssl.sh /usr/local/bin/
 
-    chmod 600 /etc/nginx/ssl/nginx.key
-    chmod 644 /etc/nginx/ssl/nginx.crt
+# Set permissions
+RUN chmod +x /usr/local/bin/*.sh
 
-    echo "SSL certificate generated at /etc/nginx/ssl/"
-else
-    echo "SSL certificate already exists. Skipping generation."
-fi
+EXPOSE 443
 
-# Test nginx configuration before starting
-echo "Testing nginx configuration..."
-nginx -t
-echo "Nginx configuration test passed."
-
-# Start nginx in foreground (PID 1)
-echo "Starting Nginx..."
-exec nginx -g "daemon off;"
+ENTRYPOINT ["/usr/local/bin/generate_ssl.sh"]

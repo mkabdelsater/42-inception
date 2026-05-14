@@ -1,16 +1,38 @@
-all : up
+COMPOSE_FILE = srcs/docker-compose.yml
+DATA_DIR = /home/$(USER)/data
 
-up : 
-	@docker-compose -f ./srcs/docker-compose.yml up -d
+.PHONY: all build up down clean fclean re
 
-down : 
-	@docker-compose -f ./srcs/docker-compose.yml down
+all: build up
 
-stop : 
-	@docker-compose -f ./srcs/docker-compose.yml stop
+# Create data directories
+$(DATA_DIR)/mariadb:
+	mkdir -p $(DATA_DIR)/mariadb
 
-start : 
-	@docker-compose -f ./srcs/docker-compose.yml start
+$(DATA_DIR)/wordpress:
+	mkdir -p $(DATA_DIR)/wordpress
 
-status : 
-	@docker ps
+# Build images
+build: $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress
+	docker compose -f $(COMPOSE_FILE) build
+
+# Start services
+up:
+	docker compose -f $(COMPOSE_FILE) up -d
+
+# Stop services
+down:
+	docker compose -f $(COMPOSE_FILE) down
+
+# Clean containers and images
+clean:
+	docker compose -f $(COMPOSE_FILE) down
+	docker system prune -af
+
+# Full clean including volumes
+fclean: clean
+	docker volume prune -f
+	sudo rm -rf $(DATA_DIR)
+
+# Rebuild everything
+re: fclean all

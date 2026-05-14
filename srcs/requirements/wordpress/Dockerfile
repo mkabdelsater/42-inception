@@ -24,7 +24,7 @@ WORKDIR /var/www/html
 COPY conf/www.conf /etc/php/8.2/fpm/pool.d/
 
 # set permissions for setup script
-COPY tools/setup_wordpress.sh /usr/local/bin/
+COPY tools/setup.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/setup.sh
 
 ENTRYPOINT ["/usr/local/bin/setup.sh"]
