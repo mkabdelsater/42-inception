@@ -13,9 +13,14 @@ RUN apt-get update && apt-get install -y \
   php8.2-soap \
   php8.2-xml \
   php8.2-zip \
+  php8.2-redis \
+  mariadb-client \
   wget \
   curl \
   && ln -s /usr/sbin/php-fpm8.2 /usr/local/bin/php-fpm \
+  && curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+  && chmod +x wp-cli.phar \
+  && mv wp-cli.phar /usr/local/bin/wp \
   && rm -rf /var/lib/apt/lists/*
 
 # Create WordPress directory

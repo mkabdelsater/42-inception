@@ -41,6 +41,13 @@ ${WP_SALTS}
 
 define('WP_DEBUG', false);
 
+// Redis configuration
+define('WP_REDIS_HOST', 'redis');
+define('WP_REDIS_PORT', 6379);
+define('WP_REDIS_TIMEOUT', 1);
+define('WP_REDIS_READ_TIMEOUT', 1);
+define('WP_REDIS_DATABASE', 0);
+
 if ( !defined('ABSPATH') )
     define('ABSPATH', __DIR__ . '/');
 
@@ -51,6 +58,27 @@ EOF
     find "$WP_PATH" -type d -exec chmod 750 {} \;
     find "$WP_PATH" -type f -exec chmod 640 {} \;
     chown -R www-data:www-data "$WP_PATH"
+
+    echo "WordPress files prepared. Installing/Configuring via WP-CLI..."
+    
+    # Wait for MariaDB to be ready
+    until mysqladmin -h mariadb -u "${WORDPRESS_DB_USER}" -p"${WORDPRESS_DB_PASSWORD}" ping >/dev/null 2>&1; do
+        echo "Waiting for MariaDB..."
+        sleep 2
+    done
+
+    # Finish WordPress installation
+    wp core install --allow-root \
+        --url="${DOMAIN_NAME}" \
+        --title="Inception" \
+        --admin_user="${WORDPRESS_ADMIN_USER:-admin}" \
+        --admin_password="${WORDPRESS_ADMIN_PASSWORD:-admin123}" \
+        --admin_email="${WORDPRESS_ADMIN_EMAIL:-admin@example.com}" \
+        --path="$WP_PATH"
+
+    # Install and enable Redis plugin
+    wp plugin install redis-cache --activate --allow-root --path="$WP_PATH"
+    wp redis enable --allow-root --path="$WP_PATH"
 
     echo "WordPress setup complete."
 else
