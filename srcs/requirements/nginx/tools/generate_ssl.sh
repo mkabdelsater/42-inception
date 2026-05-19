@@ -24,6 +24,10 @@ else
     echo "SSL certificate already exists. Skipping generation."
 fi
 
+# Replace environment variables in nginx.conf
+echo "Replacing environment variables in nginx.conf..."
+envsubst '$DOMAIN_NAME' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.tmp && mv /etc/nginx/nginx.conf.tmp /etc/nginx/nginx.conf
+
 # Test nginx configuration before starting
 echo "Testing nginx configuration..."
 nginx -t

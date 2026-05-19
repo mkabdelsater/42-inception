@@ -3,6 +3,7 @@ FROM debian:bookworm
 RUN apt-get update && apt-get install -y \
     nginx \
     openssl \
+    gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Ensure nginx runs as www-data with correct UID
