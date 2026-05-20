@@ -3,9 +3,9 @@ set -e
 
 # Create FTP user
 if ! id "$FTP_USER" &>/dev/null; then
-    useradd -m -s /bin/bash "$FTP_USER"
+    useradd -m -s /bin/bash -G www-data "$FTP_USER"
     echo "$FTP_USER:$FTP_PASSWORD" | chpasswd
-    echo "FTP user '$FTP_USER' created."
+    echo "FTP user '$FTP_USER' created and added to www-data group."
 fi
 
 # Configure vsftpd
@@ -58,10 +58,9 @@ EOF
 echo "$FTP_USER" > /etc/vsftpd.userlist
 
 # Ensure permissions on the volume
-# Note: www-data (UID 33) owns the volume in WordPress container.
-# We might need to adjust UIDs or use a shared group if we want both to write.
-# For simplicity, we'll just make sure the user can access it.
-chown -R "$FTP_USER:$FTP_USER" /var/www/html
+# We want both www-data and the FTP user to be able to read/write.
+chown -R www-data:www-data /var/www/html
+chmod -R 775 /var/www/html
 
 echo "Starting vsftpd..."
 exec /usr/sbin/vsftpd /etc/vsftpd.conf
