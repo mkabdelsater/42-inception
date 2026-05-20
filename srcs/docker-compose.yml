@@ -89,6 +89,21 @@ services:
       - inception-network
     restart: always
 
+  cadvisor:
+    build:
+      context: requirements/bonus/cadvisor
+    image: cadvisor:inception
+    container_name: cadvisor
+    networks:
+      - inception-network
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: always
+
   nginx:
     build:
       context: requirements/nginx
