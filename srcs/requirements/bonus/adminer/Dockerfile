@@ -1,11 +1,23 @@
 FROM debian:bookworm
 
+RUN apt-get update && apt-get install -y \
+    php8.2-fpm \
+    php8.2-mysql \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt -y update 
+# Create directory for Adminer
+WORKDIR /var/www/html/adminer
 
-COPY ./tools/script.sh /
+# Download Adminer
+RUN wget "https://www.adminer.org/latest.php" -O index.php
 
-RUN apt install wget -y && apt install php php-mysql  -y
+# Configure PHP-FPM to listen on port 9000
+RUN sed -i 's|listen = /run/php/php8.2-fpm.sock|listen = 9000|g' /etc/php/8.2/fpm/pool.d/www.conf
 
+# Ensure the run directory for PHP-FPM exists
+RUN mkdir -p /run/php
 
-CMD ["/script.sh"]
+EXPOSE 9000
+
+CMD ["php-fpm8.2", "-F"]

@@ -71,6 +71,24 @@ services:
       - "40000-40005:40000-40005"
     restart: always
 
+  website:
+    build:
+      context: requirements/bonus/website
+    image: website:inception
+    container_name: website
+    networks:
+      - inception-network
+    restart: always
+
+  adminer:
+    build:
+      context: requirements/bonus/adminer
+    image: adminer:inception
+    container_name: adminer
+    networks:
+      - inception-network
+    restart: always
+
   nginx:
     build:
       context: requirements/nginx
