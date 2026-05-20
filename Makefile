@@ -1,7 +1,7 @@
 COMPOSE_FILE = srcs/docker-compose.yml
 DATA_DIR = /home/$(USER)/data
 
-.PHONY: all build up down clean fclean re
+.PHONY: all build up down clean fclean re restart
 
 all: build up
 
@@ -19,6 +19,10 @@ build: $(DATA_DIR)/mariadb $(DATA_DIR)/wordpress
 # Start services
 up:
 	docker compose -f $(COMPOSE_FILE) up -d
+
+# Restart services
+restart:
+	docker compose -f $(COMPOSE_FILE) restart
 
 # Stop services
 down:
