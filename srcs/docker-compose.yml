@@ -53,6 +53,24 @@ services:
       - inception-network
     restart: always
 
+  ftp:
+    build:
+      context: requirements/bonus/ftp
+    image: ftp:inception
+    container_name: ftp
+    networks:
+      - inception-network
+    volumes:
+      - wordpress_data:/var/www/html
+    environment:
+      FTP_USER: ${FTP_USER}
+      FTP_PASSWORD: ${FTP_PASSWORD}
+      DOMAIN_NAME: ${DOMAIN_NAME}
+    ports:
+      - "21:21"
+      - "40000-40005:40000-40005"
+    restart: always
+
   nginx:
     build:
       context: requirements/nginx

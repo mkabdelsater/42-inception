@@ -1,33 +1,67 @@
 #!/bin/bash
+set -e
 
-service vsftpd start
+# Create FTP user
+if ! id "$FTP_USER" &>/dev/null; then
+    useradd -m -s /bin/bash "$FTP_USER"
+    echo "$FTP_USER:$FTP_PASSWORD" | chpasswd
+    echo "FTP user '$FTP_USER' created."
+fi
 
-adduser $ftp_user --disabled-password
+# Configure vsftpd
+cat > /etc/vsftpd.conf << EOF
+# Listen on IPv4
+listen=YES
+listen_ipv6=NO
 
-echo "$ftp_user:$ftp_pwd" | /usr/sbin/chpasswd
+# Enable anonymous access?
+anonymous_enable=NO
 
-echo "$ftp_user" | tee -a /etc/vsftpd.userlist 
-
-mkdir /home/$ftp_user/ftp
-
-chown nobody:nogroup /home/$ftp_user/ftp
-chmod a-w /home/$ftp_user/ftp
-
-mkdir /home/$ftp_user/ftp/files
-chown $ftp_user:$ftp_user /home/$ftp_user/ftp/files
-
-sed -i -r "s/#write_enable=YES/write_enable=YES/1"   /etc/vsftpd.conf
-sed -i -r "s/#chroot_local_user=YES/chroot_local_user=YES/1"   /etc/vsftpd.conf
-
-echo "
+# Enable local users?
 local_enable=YES
+
+# Enable uploading?
+write_enable=YES
+
+# Local umask
+local_umask=022
+
+# Display directory messages?
+dirmessage_enable=YES
+
+# Log settings
+xferlog_enable=YES
+connect_from_port_20=YES
+
+# Chroot settings
+chroot_local_user=YES
 allow_writeable_chroot=YES
+
+# Path settings
+local_root=/var/www/html
+
+# Secure settings
+secure_chroot_dir=/var/run/vsftpd/empty
+
+# Passive mode settings (for Docker)
 pasv_enable=YES
-local_root=/home/sami/ftp
 pasv_min_port=40000
 pasv_max_port=40005
-userlist_file=/etc/vsftpd.userlist" >> /etc/vsftpd.conf
+pasv_address=${DOMAIN_NAME}
 
-service vsftpd stop
+# Other settings
+userlist_enable=YES
+userlist_file=/etc/vsftpd.userlist
+userlist_deny=NO
+EOF
 
-/usr/sbin/vsftpd
+echo "$FTP_USER" > /etc/vsftpd.userlist
+
+# Ensure permissions on the volume
+# Note: www-data (UID 33) owns the volume in WordPress container.
+# We might need to adjust UIDs or use a shared group if we want both to write.
+# For simplicity, we'll just make sure the user can access it.
+chown -R "$FTP_USER:$FTP_USER" /var/www/html
+
+echo "Starting vsftpd..."
+exec /usr/sbin/vsftpd /etc/vsftpd.conf
