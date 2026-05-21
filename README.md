@@ -24,6 +24,7 @@ Key components:
 - Docker and Docker Compose installed.
 - Domain mapping in `/etc/hosts`, add the following line if it's not present:
 `127.0.0.1  moabdels.42.fr`
+- Javascript enabled to view the website.
 
 ### Execution
 1. **Clone the repository:**
