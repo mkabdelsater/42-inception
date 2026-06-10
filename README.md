@@ -5,7 +5,7 @@
 ## Description
 This project introduces Containers through Docker. Containerization
 is the backbone of modern web architecture, giving us control over all elements
-of a techstack.  
+of a techstack.
 
 The project is also a change to develop some System Administration skills as
 we set up a complex infrastructure using Docker. The goal is to containerize a
@@ -53,6 +53,27 @@ Key components:
 
 ## Project Description & Design Choices
 
+### Docker
+
+
+What a container 'is' is a minimalist VM, the barebones needed to run
+a particular service. This is useful in modern web dev because we
+rely on multiple services, and we need to be able to manage and replicate
+them separately.
+
+The main benefit of containers is ... containement. Each process
+and part of our stack can exist in total isolation to each other
+part of our tech stack, this entails the following benefits:
+
+- each container has everything it needs for it's process to function without relying on the host machine. This lets us run the container on any machine.
+
+- better security: a breach in the database for example will not affect the front end and vice versa.
+
+- because each container is running separately they're easier to manage and Docker can serve as management architecture.
+
+- because containers are ... self contained, they can run anywhere. No (less) headaches when migrating and no endless "it runs on my machine" debacles.
+
+
 ### Virtual Machines vs Docker
 Virtual Machines (VMs) virtualize the entire hardware layer, including the kernel, which makes them heavy and resource-intensive. Docker, on the other hand, uses *OS-level virtualization*(containers), sharing the host's kernel while isolating the application processes. This makes containers significantly lighter, faster to start, and more portable.
 
@@ -60,6 +81,18 @@ This environment isolates each process (hence the term Container), ideally
 preventing processes running inside the container escaping it. This lets us
 prevent these processes from accessing data outside the container, or using
 resources outside the container.
+
+### Images and Docker Compose
+
+An image is a package containing everything a conainer needs to run:
+files, binaries, libraries and configurations. Each container should
+ideally run one service, Docker encourages this by making Containers
+*immutable*. Containers are read only, any changes are 'layered' on top of
+the container as their own images.
+
+Immutablity exists to prevent things such as configuration drift,
+untracked changes, broad attack surfaces, and inconsistent dev environments
+across services, basically all "It Works on My Machine" issues.
 
 ### Secrets vs Environment Variables
 Environment variables are useful for non-sensitive configuration but can be easily exposed (e.g., via `docker inspect`). For sensitive data like passwords, we use *Docker Secrets*. These are stored in files mounted at `/run/secrets/`, ensuring they are never logged or stored in the image layers.
