@@ -51,6 +51,65 @@ Key components:
 - `make fclean`: Full clean, including volumes and data directories.
 - `make re`: Rebuild and restart everything from scratch.
 
+### Evaluation Commands
+
+#### Testing that NGINX is only accessible via 443:
+
+ Check which ports are bound to host machine:
+- `docker compose -f srcs/docker-compose.yml ps`
+- Under the PORTS Column for the nginx container, you should *only* see: `0.0.0.0:443/tcp`
+- Test connecton on 443 `curl -vk https://moabdels.42.fr --connect-timeout 2` you should see a successful connection and the HTML output or a redirect to Wordpress.
+- Check that NGINX is the only entrypoint: `nc -zv localhost 3306` to test MariaDB and `nc -zv localhost 9000` to test PHP-FPM, both should say `Connection refused` proving they're isolated within the Docker network and can only be reached through Nginx
+
+Note: per the bonus rules, our FTP server is allowed to have it's own ports open, for us
+that's **21** and **40000-40005**.
+
+#### Testing that NGINX cannot be accessed through http (port 80):
+
+`curl -v http://moabdels.42.fr --connect-timeout 2`
+
+#### Demosntrating TLS
+
+Force a connection using only 1.3/1.2 -> You should see SSL connection using TLSv1.3.
+
+`curl -vk --tlsv1.3 https://moabdels.42.fr 2>&1 | grep "SSL connection using"`
+
+`curl -vk --tlsv1.2 --tls-max 1.2 https://moabdels.42.fr 2>&1 | grep "SSL connection using"`
+
+Force a connection using 1.1 -> Should fail as NGINX is configured to reject this.
+
+`curl -vk --tlsv1.1 --tls-max 1.1 https://moabdels.42.fr`
+
+Verify the config file:
+
+`docker exec -it nginx grep "ssl_protocols" /etc/nginx/nginx.conf`
+
+#### Logging in to services
+
+Wordpress: moabdels.42.fr/wp-admin/
+User: `moabdels`
+Pass: `secure_admin_password`
+
+Accessing the Database: 
+Via Adminer: https://moabdels.42.fr/adminer
+System: MySQL
+Server: mariadb
+Username: wp_user
+Password: pass
+Database: wordpress_db
+
+Via CLI:
+`docker exec -it mariadb mysql -u wp_user -p`
+When prompted for a password: `pass`
+to use the root user instead:
+`docker exec -it mariadb mysql -u root -p`
+
+- See all databases: `SHOW DATABASES`
+- Select wordpress db: `USE wordpress_db`
+- See all tables: `SHOW TABLES;`
+- See users: `SELECT user_login, user_email FROM wp_users;`
+leave the CLI with `exit`
+
 ## Project Description & Design Choices
 
 ### Docker
@@ -102,6 +161,11 @@ Using the *Host Network* removes isolation between the container and the host, w
 
 ### Docker Volumes vs Bind Mounts
 Bind mounts depend on the specific directory structure of the host machine. *Named Volumes* are managed by Docker and are more portable and secure. In this project, we use named volumes (`mariadb_data` and `wordpress_data`) that point to a specific persistent path on the host (`/home/moabdels/data`), ensuring data persists even if containers are deleted.
+
+### Credentials Management
+No passwords are hardcoded inside the Dockerfile, in `docker-compose.yml`
+we define and mount secrets for the WordPress admin, the second WordPress user 
+and the FTP user.
 
 ## Resources
 - [Docker Documentation](https://docs.docker.com/)
