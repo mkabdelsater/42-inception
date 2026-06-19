@@ -9,6 +9,10 @@ if [ -n "$WORDPRESS_DB_PASSWORD_FILE" ] && [ -f "$WORDPRESS_DB_PASSWORD_FILE" ];
     export WORDPRESS_DB_PASSWORD
 fi
 
+if [ -n "$WORDPRESS_USER_PASSWORD_FILE" ] && [ -f "$WORDPRESS_USER_PASSWORD_FILE" ]; then
+    WORDPRESS_USER_PASSWORD=$(cat "$WORDPRESS_USER_PASSWORD_FILE")
+fi
+
 echo "Setting up WordPress..."
 
 # Download and configure WordPress if not present
@@ -75,6 +79,16 @@ EOF
         --admin_password="${WORDPRESS_ADMIN_PASSWORD:-admin123}" \
         --admin_email="${WORDPRESS_ADMIN_EMAIL:-admin@example.com}" \
         --path="$WP_PATH"
+
+    # Create regular second user
+    if ! wp user get "${WORDPRESS_USER}" --allow-root --path="$WP_PATH" >/dev/null 2>&1; then
+        echo "Creating second WordPress user..."
+        wp user create "${WORDPRESS_USER}" "${WORDPRESS_USER_EMAIL}" \
+            --role=author \
+            --user_pass="${WORDPRESS_USER_PASSWORD}" \
+            --allow-root \
+            --path="$WP_PATH"
+    fi
 
     # Install and enable Redis plugin
     wp plugin install redis-cache --activate --allow-root --path="$WP_PATH"
