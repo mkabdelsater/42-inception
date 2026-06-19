@@ -3,6 +3,9 @@ set -e
 
 # Create FTP user
 if ! id "$FTP_USER" &>/dev/null; then
+    if [ -n "$FTP_PASSWORD_FILE" ] && [ -f "$FTP_PASSWORD_FILE" ]; then
+        FTP_PASSWORD=$(cat "$FTP_PASSWORD_FILE")
+    fi
     useradd -m -s /bin/bash -G www-data "$FTP_USER"
     echo "$FTP_USER:$FTP_PASSWORD" | chpasswd
     echo "FTP user '$FTP_USER' created and added to www-data group."
