@@ -61,6 +61,11 @@ Key components:
 - Test connecton on 443 `curl -vk https://moabdels.42.fr --connect-timeout 2` you should see a successful connection and the HTML output or a redirect to Wordpress.
 - Check that NGINX is the only entrypoint: `nc -zv localhost 3306` to test MariaDB and `nc -zv localhost 9000` to test PHP-FPM, both should say `Connection refused` proving they're isolated within the Docker network and can only be reached through Nginx
 
+`docker compose ps`: Lists containers for a Compose project, with current status and exposed ports.
+`nc -zv`: invoke the netcat command with the verbose flag and only scanning
+for listening daemons.
+
+
 Note: per the bonus rules, our FTP server is allowed to have it's own ports open, for us
 that's **21** and **40000-40005**.
 
