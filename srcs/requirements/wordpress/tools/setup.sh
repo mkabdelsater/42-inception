@@ -84,16 +84,6 @@ EOF
         --admin_email="${WORDPRESS_ADMIN_EMAIL:-admin@example.com}" \
         --path="$WP_PATH"
 
-    # Create regular second user
-    if ! wp user get "${WORDPRESS_USER}" --allow-root --path="$WP_PATH" >/dev/null 2>&1; then
-        echo "Creating second WordPress user..."
-        wp user create "${WORDPRESS_USER}" "${WORDPRESS_USER_EMAIL}" \
-            --role=author \
-            --user_pass="${WORDPRESS_USER_PASSWORD}" \
-            --allow-root \
-            --path="$WP_PATH"
-    fi
-
     # Install and enable Redis plugin
     wp plugin install redis-cache --activate --allow-root --path="$WP_PATH"
     wp redis enable --allow-root --path="$WP_PATH"
@@ -101,6 +91,22 @@ EOF
     echo "WordPress setup complete."
 else
     echo "WordPress already initialized, skipping setup."
+fi
+
+# Wait for MariaDB to be ready (required to interact with DB via WP-CLI)
+until mysqladmin -h mariadb -u "${WORDPRESS_DB_USER}" -p"${WORDPRESS_DB_PASSWORD}" ping >/dev/null 2>&1; do
+    echo "Waiting for MariaDB..."
+    sleep 2
+done
+
+# Create regular second user if missing
+if ! wp user get "${WORDPRESS_USER}" --allow-root --path="$WP_PATH" >/dev/null 2>&1; then
+    echo "Creating second WordPress user..."
+    wp user create "${WORDPRESS_USER}" "${WORDPRESS_USER_EMAIL}" \
+        --role=author \
+        --user_pass="${WORDPRESS_USER_PASSWORD}" \
+        --allow-root \
+        --path="$WP_PATH"
 fi
 
 echo "Starting PHP-FPM..."
