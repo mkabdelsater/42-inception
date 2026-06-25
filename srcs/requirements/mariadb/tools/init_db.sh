@@ -8,7 +8,10 @@ echo "Initializing MariaDB..."
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "Initializing data directory..."
     mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null
+fi
 
+# Configure database and user if the target database doesn't exist
+if [ ! -d "/var/lib/mysql/${MYSQL_DATABASE}" ]; then
     echo "Starting temp MariaDB server (without networking)..."
     mysqld --skip-networking --skip-grant-tables --socket=/run/mysqld/mysqld.sock --user=mysql &
     pid="$!"
@@ -45,7 +48,7 @@ EOF
     wait "$pid" || true
     echo "Initialization complete."
 else
-    echo "MariaDB already initialized, skipping setup."
+    echo "MariaDB database already setup, skipping SQL config."
 fi
 
 echo "Starting MariaDB..."

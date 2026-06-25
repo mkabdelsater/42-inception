@@ -172,6 +172,16 @@ No passwords are hardcoded inside the Dockerfile, in `docker-compose.yml`
 we define and mount secrets for the WordPress admin, the second WordPress user 
 and the FTP user.
 
+### Misc Questions
+
+#### What is FTP
+
+#### What are the Bridge and Host Networks
+
+#### What are Docker Volumes
+
+#### Explain the bonus services
+
 ## Resources
 - [Docker Documentation](https://docs.docker.com/)
 - [Nginx Official Docs](https://nginx.org/en/docs/)
